@@ -1,0 +1,142 @@
+openapi: 3.0.3
+info:
+  title: Jobsite Weather Integration API
+  version: 1.0.1
+  description: Returns a simplified weather summary by location.
+
+servers:
+  - url: http://localhost:8080
+
+tags:
+  - name: weather
+    description: Weather summary for location
+
+paths:
+  /weather/summary:
+    get:
+      tags: [ weather ]
+      operationId: getWeatherSummary
+      summary: Get current weather summary for a jobsite location
+      description: |
+        Provide **either** `city` **or** (`lat` and `lon`). If both are provided, `city` takes precedence.
+        Use `units=F` to include temperature in Fahrenheit in the response.
+      parameters:
+        - in: query
+          name: city
+          description: City name
+          required: false
+          schema: { type: string, minLength: 1 }
+        - in: query
+          name: lat
+          description: Latitude, decimal degrees (e.g., -36.8485). Must be used with `lon`.
+          required: false
+          schema:
+            type: number
+            format: double
+            minimum: -90
+            maximum: 90
+        - in: query
+          name: lon
+          description: Longitude, decimal degrees (e.g., 174.7633). Must be used with `lat`.
+          required: false
+          schema:
+            type: number
+            format: double
+            minimum: -180
+            maximum: 180
+        - in: query
+          name: units
+          description: Temperature units. Defaults to Celsius.
+          required: false
+          schema:
+            $ref: "#/components/schemas/TempUnits"
+      responses:
+        "200":
+          description: Simplified weather summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WeatherSummary"
+              examples:
+                sample:
+                  value:
+                    jobsite: "Auckland"
+                    temperatureC: 24.3
+                    temperatureF: 75.7
+                    condition: "Clear sky"
+                    windSpeedKph: 11.0
+                    updatedAt: "2025-10-21T03:00:00Z"
+                    isHotDay: false
+                    isGoodForConcretePouring: true
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+              examples:
+                missingParams:
+                  value: { code: "BAD_REQUEST", message: "Provide city or lat/lon." }
+        "404":
+          description: Location not found
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+              examples:
+                notFound:
+                  value: { code: "NOT_FOUND", message: "Unable to resolve location." }
+        "502":
+          description: Upstream provider error
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+              examples:
+                upstream:
+                  value: { code: "BAD_GATEWAY", message: "Weather provider unavailable." }
+components:
+  schemas:
+    WeatherSummary:
+      type: object
+      properties:
+        jobsite:
+          type: string
+        temperatureC:
+          type: number
+          format: double
+        temperatureF:
+          type: number
+          format: double
+        condition:
+          type: string
+        windSpeedKph:
+          type: number
+          format: double
+        updatedAt:
+          type: string
+          format: date-time
+        isHotDay:
+          type: boolean
+        isGoodForConcretePouring:
+          type: boolean
+
+    TempUnits:
+      type: string
+      enum: [ C, F ]
+      default: C
+      x-enum-varnames: [ C, F ]
+      x-enum-descriptions:
+        - Celsius
+        - Fahrenheit
+
+    Error:
+      type: object
+      required: [ code, message ]
+      properties:
+        code:
+          type: string
+          example: BAD_REQUEST
+        message:
+          type: string
+          example: Provide city or lat/lon.
+        details:
+          type: object
+          additionalProperties: true
