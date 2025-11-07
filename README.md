@@ -34,7 +34,7 @@ the default port is 8080
   See `src/main/resources/openapi/api.yml` for the full contract and endpoint details.
 
 improvements:
-need logs,more Error Handling,tracing and etc
+need logs,more Error Handling,tracing and etc, forgot to round the double clean up build.gradle
 
 assumptions
 - this api is open for public
