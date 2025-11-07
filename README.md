@@ -32,3 +32,10 @@ the default port is 8080
 
 - **OpenAPI spec:**  
   See `src/main/resources/openapi/api.yml` for the full contract and endpoint details.
+
+improvements:
+need logs,more Error Handling,tracing and etc
+
+assumptions
+- this api is open for public
+- when both city and lat and log provided we use city
